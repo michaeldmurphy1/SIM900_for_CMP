@@ -22,7 +22,7 @@ def animate(i:int, ax, SRS_connection:SRS_Device, thermo_num:int, interval:int, 
     ax.set_xlabel("Time [s]")
     ax.plot(xar,yar)
 
-def create_animation(therm_num:int, update_interval:int=500, interval_on_screen:int=15):  
+def create_animation(therm_num:int, curve_type:int=0, update_interval:int=500, interval_on_screen:int=15)->str|None:  
     '''Call this class to create an animation of diode `therm_num`'''
     
     #Clearing old data and ensuring we have a file to write to
@@ -31,9 +31,8 @@ def create_animation(therm_num:int, update_interval:int=500, interval_on_screen:
     try:
         Chan = SRS_Device()
         name = Chan.get_idn()
-        print(name)
         assert name == "Stanford_Research_Systems,SIM900,s/n152872,ver3.6"
-        Chan.set_curve(therm_num,0)
+        Chan.set_curve(therm_num,curve_type)
 
         fig = plt.figure()
         ax = fig.add_subplot(1,1,1)

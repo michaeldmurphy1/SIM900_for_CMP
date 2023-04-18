@@ -21,9 +21,11 @@ def kelvin_to_voltage():
 def set_up_graph():    
     #For top button--converting temperature to voltage
     thermometer_number = int(therm_str.get())
+    curve_type = int(var_switch.get())
     interval_length = int(ent_intv.get())
     range_displayed = int(ent_dure.get())
-    result = graphing.create_animation(thermometer_number, interval_length, range_displayed)
+    result = graphing.create_animation(thermometer_number,
+                      curve_type, interval_length, range_displayed)
     if( result is not None ):
         #There was a problem opening something
         showerror("Error",result)
@@ -66,15 +68,25 @@ if __name__ == "__main__":
     lbl_therm.grid(row=0, column=0, sticky="e")
     therm_drop_down.grid(row=0, column=1, sticky="e")
 
+    lbl_switch = tk.Label(master=frm_graph_entry, text="Curve:")
+    var_switch = tk.StringVar(frm_graph_entry)
+    btn_switch_built = tk.Radiobutton(frm_graph_entry, text="Built-In", variable=var_switch,
+                                indicatoron=False, value="0", width=8)
+    btn_switch_user = tk.Radiobutton(frm_graph_entry, text="User-Defined", variable=var_switch,
+                                indicatoron=False, value="1", width=10)
+    var_switch.set("0")
+    lbl_switch.grid(row=1, column=0)
+    btn_switch_built.grid(row=1, column=1, sticky="e")
+    btn_switch_user.grid(row=1, column=2, padx=2)
 
     lbl_intv_l = tk.Label(master=frm_graph_entry, text="Ping intervals:")
     ent_intv = tk.Entry(master=frm_graph_entry, width=10)
     ent_intv.insert(0, "500")
     lbl_intv_r = tk.Label(master=frm_graph_entry, text="ms (min=200)")
 
-    lbl_intv_l.grid(row=1, column=0, sticky="e")
-    ent_intv.grid(row=1, column=1, sticky="e")
-    lbl_intv_r.grid(row=1, column=2, sticky="w")
+    lbl_intv_l.grid(row=2, column=0, sticky="e")
+    ent_intv.grid(row=2, column=1, sticky="e")
+    lbl_intv_r.grid(row=2, column=2, sticky="w")
 
 
     lbl_dure_l = tk.Label(master=frm_graph_entry, text="Range Displayed")
@@ -82,9 +94,11 @@ if __name__ == "__main__":
     ent_dure.insert(0, "15")
     lbl_dure_r = tk.Label(master=frm_graph_entry, text="s")
 
-    lbl_dure_l.grid(row=2, column=0, sticky="e")
-    ent_dure.grid(row=2, column=1, sticky="e")
-    lbl_dure_r.grid(row=2, column=2, sticky="w")
+    lbl_dure_l.grid(row=3, column=0, sticky="e")
+    ent_dure.grid(row=3, column=1, sticky="e")
+    lbl_dure_r.grid(row=3, column=2, sticky="w")
+
+
 
     btn_convert = tk.Button(
         master=frm_graph_entry,
@@ -92,7 +106,7 @@ if __name__ == "__main__":
         command=set_up_graph,
         bg = "#7E64C2"#"#6F689F"
     )
-    btn_convert.grid(row=3, column=1, pady=5)
+    btn_convert.grid(row=4, column=1, pady=5)
     #------------------------------------------------------------------------------
 
     # Set up the layout using the .grid() geometry manager
