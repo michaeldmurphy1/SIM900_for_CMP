@@ -3,56 +3,22 @@ from time import sleep
 
 if __name__ == "__main__":
     
-    #file = open("3/23_first_run.txt","x")
-
+    #Creating channel to device
     Chan = SRS_Device()
+    #Who are we talking to?
     Chan.get_idn()
+    
+    #Call to get temperature for diode on line 1
+    Chan.get_temp(1)
+
+    #To be called when closing
+    #TODO:how #1 to make it so we don't need to manually do this?
     Chan.end()
     quit()
-    Chan.get_temp(1)
     Chan.set_points(1,0,"testing",[0.444,293,0.990,77])
     Chan.view_points(1)
     Chan.set_curve(1,1)
     Chan.get_volt(2, 1)
-    Chan.end()
-    
-    try:
-        while( True ):
-            temp1 = Chan.get_temp(1)
-            temp2= Chan.get_temp(2)
-            volt1 = Chan.get_volt(1)
-            volt2 = Chan.get_volt(2)
-            file.write(f"{volt1},{temp1},{volt2},{temp2}")
-            sleep(1)
-    except:
-        file.close()
-
-    #while True:
-    #    Chan.get_volt(2)
-    #    sleep(1)
-
-    #Chan.set_points(1, axis_type=2, name='new_test')
-    #Chan.view_points(1)
-    '''Chan.set_points(1, data=[0.01,0.01,0.02,0.02,0.03,0.03,0.04,0.04,0.05,0.05,0.06,0.06,0.07,0.07,0.08,0.08])
-    Chan.view_points(1)
-    Chan.view_points(2)
-    Chan.view_points(3)
-    Chan.view_points(4)'''
-
-
-    '''Chan.set_points(1, axis_type=2, name='after_break')
-    Chan.view_points(1)
-    Chan.set_points(1, data=[0.0001,.0002])
-    Chan.view_points(1)'''
-    quit()
-    quit()
-    #Chan.set_points(1, 1, "TEST")
-    data = [0.0002,0.0001]#,0.0002,0.0003, 0.04, 0.05, 0.2,0.3]
-    for i in range(int(len(data)/2)):
-        print(f"{data[2*i]}, {data[2*i+1]}")
-    Chan.set_points(1, 0, "NEW", data=data)
-    #Chan.set_points(1, data=data)
-    Chan.view_points(1)
 
 
 '''

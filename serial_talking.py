@@ -17,7 +17,7 @@ class SRS_Device():
 
         #Setting up pyvisa objects for the SIM900, which houses SIM922
         rm = pyvisa.ResourceManager()
-        #TODO: figure out how to generalize ports?
+        #TODO: #3 figure out how to generalize ports?
         self.channel = rm.open_resource('ASRL1::INSTR')
         #A test to see if we are connected to something (if not, the SIM900 is not on)
         try:
@@ -37,7 +37,7 @@ class SRS_Device():
 
     def end(self):
         #Closing communication with ASRL1::INSTR
-        #TODO: should we be writing final things to tidy up?
+        #TODO: #2 should we be writing final things to tidy up?
         self.channel.write(f"'{self.ESC}'")
         self.ping()
         self.channel.close()
