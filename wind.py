@@ -2,6 +2,7 @@
 
 import tkinter as tk
 from tkinter.messagebox import showerror
+from tkinter.ttk import Sizegrip
 import graphing
 import temperature_fitting_code.what_volt_for_temp as k_to_v
 
@@ -34,7 +35,8 @@ if __name__ == "__main__":
     # Set up the window
     window = tk.Tk()
     window.title("Diode Thermometer")
-    window.resizable(width=False, height=False)
+    #window.resizable(width=False, height=False)
+    #window.minsize(window.winfo_width(), window.winfo_height())
 
     #Setting up Temperature Conversion Things
     frm_conversion = tk.Frame(master=window)
@@ -56,9 +58,13 @@ if __name__ == "__main__":
     btn_convert.grid(row=0, column=1, pady=10)
     lbl_result.grid(row=0, column=2, padx=10)
     #-------------------------------------------------------------------------
+    #Creating dark line
+    sep = tk.Frame(master=window, bg="black", height=2, bd=0)
+    #-------------------------------------------------------------------------
     #Setting up graph input things
     frm_graph_entry = tk.Frame(master=window)
 
+    #Choosing with Diode
     lbl_therm = tk.Label(master=frm_graph_entry, text="Thermometer:")
     therm_str = tk.StringVar(frm_graph_entry)
     therm_nums = [1,2,3,4]
@@ -68,6 +74,7 @@ if __name__ == "__main__":
     lbl_therm.grid(row=0, column=0, sticky="e")
     therm_drop_down.grid(row=0, column=1, sticky="e")
 
+    #Choosing Curve
     lbl_switch = tk.Label(master=frm_graph_entry, text="Curve:")
     var_switch = tk.StringVar(frm_graph_entry)
     btn_switch_built = tk.Radiobutton(frm_graph_entry, text="Built-In", variable=var_switch,
@@ -79,6 +86,7 @@ if __name__ == "__main__":
     btn_switch_built.grid(row=1, column=1, sticky="e")
     btn_switch_user.grid(row=1, column=2, padx=2)
 
+    #Setting Ping intervals
     lbl_intv_l = tk.Label(master=frm_graph_entry, text="Ping intervals:")
     ent_intv = tk.Entry(master=frm_graph_entry, width=10)
     ent_intv.insert(0, "500")
@@ -88,7 +96,7 @@ if __name__ == "__main__":
     ent_intv.grid(row=2, column=1, sticky="e")
     lbl_intv_r.grid(row=2, column=2, sticky="w")
 
-
+    #Setting Range Displayed
     lbl_dure_l = tk.Label(master=frm_graph_entry, text="Range Displayed")
     ent_dure = tk.Entry(master=frm_graph_entry, width=10)
     ent_dure.insert(0, "15")
@@ -98,29 +106,33 @@ if __name__ == "__main__":
     ent_dure.grid(row=3, column=1, sticky="e")
     lbl_dure_r.grid(row=3, column=2, sticky="w")
 
-
-
+    #Button to create graph
     btn_convert = tk.Button(
         master=frm_graph_entry,
         text="Generate Graph",
         command=set_up_graph,
         bg = "#7E64C2"#"#6F689F"
     )
-    btn_convert.grid(row=4, column=1, pady=5)
+    btn_convert.grid(row=4, column=1, pady=[5,0])
     #------------------------------------------------------------------------------
-
-    # Set up the layout using the .grid() geometry manager
+    #Section Labels
     lbl_head_convert = tk.Label(master=window, text=" Converting Temperature into Diode Voltage ",
                                 font=("bold"), bg = "#A0A0A0", )
     lbl_head_graph = tk.Label(master=window, text="Plotting Temperature", font=("bold"),
                               bg = "#A0A0A0", )
 
-    lbl_head_convert.grid(row=0, column=0, padx=0, pady=10, sticky="ew")
-    frm_conversion.grid(row=1, column=0, )
-    lbl_head_graph.grid(row=3, column=0, pady=10, sticky="ew")
-    frm_graph_entry.grid(row=4, column=0, )
+    # Set up the layout using the .pack() geometry manager
+    lbl_head_convert.pack(fill=tk.X)
+    frm_conversion.pack(fill=tk.Y, expand=tk.TRUE)
+    sep.pack(fill=tk.X)
+    lbl_head_graph.pack(fill=tk.X)
+    frm_graph_entry.pack(fill=tk.Y, expand=tk.TRUE)
 
+    #Finishing touches
+    my_sizegrip = Sizegrip(master=window)
+    my_sizegrip.pack(side="right", anchor="se")
 
-
+    window.update()
+    window.minsize(window.winfo_width(), window.winfo_height())
     # Run the application
     window.mainloop()
