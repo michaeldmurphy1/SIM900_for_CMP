@@ -29,14 +29,14 @@ def create_animation(therm_num:int, curve_type:int=0, update_interval:int=500, i
     file = open("temperature_data.txt","w")
     file.close()
     try:
-        Chan = SRS_Device()
-        name = Chan.get_idn()
-        assert name == "Stanford_Research_Systems,SIM900,s/n152872,ver3.6"
-        Chan.set_curve(therm_num,curve_type)
+        chan = SRS_Device()
+        name = chan.get_idn()
+        assert name == "Stanford_Research_Systems,SIM922,s/n024290,ver2.70"
+        chan.curve_type(therm_num,curve_type)
 
         fig = plt.figure()
         ax = fig.add_subplot(1,1,1)
-        ani = animation.FuncAnimation(fig, animate, fargs=(ax, Chan,therm_num,update_interval,interval_on_screen), interval=update_interval, cache_frame_data=False )
+        ani = animation.FuncAnimation(fig, animate, fargs=(ax, chan,therm_num,update_interval,interval_on_screen), interval=update_interval, cache_frame_data=False )
         plt.show()
     except RuntimeError:
         #Thrown when the SIM900 is not turned on
@@ -45,7 +45,7 @@ def create_animation(therm_num:int, curve_type:int=0, update_interval:int=500, i
         #Some other probllem connecting
         return "Problem Connecting to SIM900:\ntry turning off and on"
     else:
-        Chan.end()
+        chan.end()
 
 
 
@@ -126,14 +126,14 @@ if __name__ == "__main__":
     file = open("temperature_data.txt","w")
     file.close()
     
-    Chan = SRS_Device()
+    chan = SRS_Device()
     therm_num=2
-    #Chan.set_points(therm_num,0,"read_data",[0.444,293,0.990,77])
-    Chan.set_curve(therm_num,0)
+    #chan.set_points(therm_num,0,"read_data",[0.444,293,0.990,77])
+    chan.set_curve(therm_num,0)
     interval = 500 # [ms]
     interval_on_screen = 15 #[s]
 
     fig = plt.figure()
     ax = fig.add_subplot(1,1,1)
-    ani = animation.FuncAnimation(fig, animate, fargs=(Chan,therm_num,interval,interval_on_screen), interval=interval, cache_frame_data=False )
+    ani = animation.FuncAnimation(fig, animate, fargs=(chan,therm_num,interval,interval_on_screen), interval=interval, cache_frame_data=False )
     plt.show()"""

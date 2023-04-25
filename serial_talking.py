@@ -1,5 +1,6 @@
 import pyvisa
 import serial
+import atexit
 import numpy as np
 from time import sleep
 import logging
@@ -20,11 +21,11 @@ class SRS_Device():
         #TODO: #3 figure out how to generalize ports?
         self.channel = rm.open_resource('ASRL1::INSTR')
         #A test to see if we are connected to something (if not, the SIM900 is not on)
-        try:
+        '''try:
             self.channel.query("*IDN?")
         except pyvisa.errors.VisaIOError as e:
-            raise RuntimeError("Please turn on the SIM900") from e
-        self.channel.read_termination = "\r\n" #This may need to be "\r\n"
+            raise RuntimeError("Please turn on the SIM900") from e'''
+        self.channel.read_termination = "\r\n"
         self.channel.write_termination = "\r"
         self.channel.write('SRST')
         #Note: not using set_points() here, making sure user is aware of the
@@ -34,6 +35,9 @@ class SRS_Device():
         #Now Interfacing with SIM922
         self.channel.write(f"CONN {self.temp_port},'{self.ESC}'")
         self._talk_to_SIM(self._set_error_masks)
+
+        #Ensuring we properly close the channel at the end of a run
+        atexit.register(self.end)
 
     def end(self):
         #Closing communication with ASRL1::INSTR
@@ -92,7 +96,8 @@ class SRS_Device():
     def errors(self):
         sb = self.channel.query("*STB?")
         sb_bin = f"{int(sb):08b}"
-        if( sb_bin[7-6] != '0'): #Do we have an error bit somewhere?
+        if(True):
+        #if( sb_bin[7-6] != '0'): #Do we have an error bit somewhere?
             if( sb_bin[7-5] == '1'): #Do we have a Standard Event Status Error?
                 esr = self.channel.query("*ESR?")
                 if(int(esr)!=0): #Always true
@@ -155,15 +160,13 @@ class SRS_Device():
                             self.logger.error(f"--{problem} for curve {n}")
                     self.logger.error("Go to page 2-21 of manual")
                     self.logger.error("*"*20)
-            raise RuntimeError("Fix the above problem(s)")
+            #raise RuntimeError("Fix the above problem(s)")
 
     def get_idn(self):
         ''''Typical command to verify that we are communicating with correct instrument: prints
-        SIM900 response to screen'''
-        self.channel.write(f"'{self.ESC}'")
+        SIM922 response to screen'''
         idn = self.channel.query('*IDN?') 
         self.logger.info( idn )
-        self.channel.write(f"CONN {self.temp_port},'{self.ESC}'")
         return idn
 
 
@@ -177,11 +180,11 @@ class SRS_Device():
         to_return = None
         try:
             to_return = f(*args)
-        except pyvisa.errors.VisaIOError:
+        except pyvisa.errors.VisaIOError as e:
             self.logger.error("Error: unable to read SIM response.")
             self.errors()
             #The following should hopefully never run
-            raise RuntimeError("A problem as slipped through the errors() function")
+            raise RuntimeError("A problem as slipped through the errors() function") from e
         self.errors()
         self.logger.info("-"*20)
         #-----------------------------------------------
@@ -252,21 +255,25 @@ class SRS_Device():
         `c`:int, which input to deal with (1-4 only)
 
         Returns:
-        list, a list of floats, representing the data points in the format [sensor value, temperature, sensor value,...]
+        list, a list of floats, representing the data points in the format [[sensor_value_1, temperature_1],[sensor_value_2,...]]
             Note: the data is formatted in the same way the curve is (etiher linear or log_10)
         '''
         def _get_curv( c:int):
             curve_type,name,n = self.channel.query(f"CINI? {c}").split(',')
             names = ["Linear","SemiLogT","SemiLogV","LogLog"]
-            self.logger.info(f"Curve namne: {name}, {names[int(n)-1]}")
-            self.logger.info(f"Curve type: {curve_type}")
+            self.logger.info(f"Curve name: {name}")
+            self.logger.info(f"Curve type: {curve_type}, {names[int(curve_type)]}")
             self.logger.info(f"Number of Inputs: {n}")
             n = int(n.strip())
             if( n==1 ):
                 self.logger.info("You cannot access data for a curve with one point (add a dummy to view)")
             else:
+                data = []
                 for i in range(n):
-                    self.logger.info(self.channel.query(f"CAPT? {c}, {i+1}"))
+                    output = self.channel.query(f"CAPT? {c}, {i+1}")
+                    self.logger.info(output)
+                    data.append(output.strip().split(" "))
+                return data
         return self._talk_to_SIM( _get_curv, c)
 
     def set_points(self, c:int, axis_type:int=None, name:str=None, data:list=None ):
@@ -277,10 +284,10 @@ class SRS_Device():
         Parameters:
         `c`:int, which input curve to deal with
         `axis_type`:int, an optional parameter, to define the type of the curve
-            -> 0: Linear | volts, kelvin
+            -> 0: Linear   | volts, kelvin
             -> 1: SemiLogT | volts, log_{10}(kelvin)
             -> 2: SemiLogV | log_{10}(volts), kelvin
-            -> 3: LogLog | log_{10}(volts), log_{10}(kelvin)
+            -> 3: LogLo  g | log_{10}(volts), log_{10}(kelvin)
         `name`:str, an optional parameter to be given iff `axis_type` is given as well
         `data`:list, a list of float values that correspond to [sensor value, temperature], in the units\
             specified for curve `c`. Multiple point pairs can be given, but the senor value must be in\
@@ -288,7 +295,7 @@ class SRS_Device():
         """
         if( axis_type is not None ):
             if( axis_type in [0,1,2,3]):
-                response = input("Notice: are you sure you want to change type of curve? (y/n)\
+                response = input("Notice: are you sure you want to re-initialize curve? (y/n)\
                                  \n\tDoing this will delete previous data ")
                 if( response.lower() in ['y', 'yes']):
                     if name is None:
@@ -304,6 +311,9 @@ class SRS_Device():
                     self.logger.info(f"Updated Channel {c} Curve Successfully")
                 else:
                     return
+            else:
+                raise ValueError("Make sure the axis_type passes to set_points() is a valid input:"
+                                 " (1, 2, 3, or 4)")
         if( data is not None ):
             if( len(data) % 2 != 0):
                 raise ValueError("Every data point requires 2 values: raw sensor \
@@ -315,15 +325,16 @@ class SRS_Device():
                     for i in range(int(len(data)/2)):
                         self.channel.write(f"CAPT {c},{data[2*i]},{data[2*i+1]}")
                         sleep(0.20)
-                except:
+                except pyvisa.errors.VisaIOError as e:
                     raise ValueError("Loading data failed--delete curve and try again\n" \
                     "Hint: make sure the data you ordered is in increasing order of sensor" \
-                        " value (including preexisting data)")
+                        " value (including preexisting data)") from e
                 self.logger.info(f"Attempted to add {int(len(data)/2)} points")
             self._talk_to_SIM( _sensor_add_points, c, data )
        
-    def set_curve(self, c:int, j:int=None)->int:
-        '''Switches between build-in and user-defined calibration curves.
+    def curve_type(self, c:int, j:int=None)->int:
+        '''Switches between built-in and user-defined calibration curves. Pass `j`
+        to actually switch curve assignment, leave `j`=None to just read current status.
         
         Parameters:
         `c`:int, which input to deal with (1-4 only)
@@ -331,11 +342,12 @@ class SRS_Device():
             -> 0: Standard, the built-in data
             -> 1: User defined, from previous user input
         While user data stored in a curve is non-volatile, the defult calibration curve is 0, Built-In
+       
         Returns:
         int, the current value for curve `c`
         '''
         names = ["Built-In","User Defined"]
-        def _set_curve( c:int, j:int ):
+        def _curve_type( c:int, j:int ):
             if( j is None ):
                 x = self.channel.query(f"CURV? {c}")
                 self.logger.info(f"Curve type: {x}, {names[int(x)]}")
@@ -344,10 +356,10 @@ class SRS_Device():
                 self.channel.write(f"CURV {c},{j}")
                 self.logger.info(f"Curve type: {str(j)}, {names[j]}")
                 return j
-        return self._talk_to_SIM( _set_curve, c,j )
+        return self._talk_to_SIM( _curve_type, c,j )
     
     def update_file(self, c:int, interval_on_screen:int):
-        with open('temperature_data.txt', 'r') as file:
+        '''with open('temperature_data.txt', 'r') as file:
             lines = file.readlines()
         with open('temperature_data.txt', 'w') as file:
             if( len(lines) > interval_on_screen ):
@@ -357,11 +369,30 @@ class SRS_Device():
             for i, line in enumerate(lines):
                 lines[i] = line.strip().split(",")[1]
             try:
-                temperature = self.channel.query(f'TVAL? {c}')
-            except pyvisa.errors.VisaIOError:
+                temperature = self.channel.query(f'VOLT? {c}')
+            except pyvisa.errors.VisaIOError as e:
                 self.logger.error("Error: unable to read SIM response.")
                 self.errors()
                 #The following should hopefully never run
-                raise RuntimeError("A problem as slipped through the errors() function")
+                raise RuntimeError("A problem as slipped through the errors() function") from e
             lines.append(f"{temperature}")
             file.write('\n'.join(f"{i+start_time},{temp}" for i,temp in enumerate(lines)))
+        '''
+        with open('temperature_data.txt', 'r+') as file:
+            lines = file.readlines()
+            if( len(lines)>0 ):
+                last_entry = int(lines[-1].split(",")[0])
+                app = '\n'
+            else:
+                last_entry=-1
+                app=""
+            for i, line in enumerate(lines):
+                lines[i] = line.strip().split(",")[1]
+            try:
+                temperature = self.channel.query(f'TVAL? {c}')
+            except pyvisa.errors.VisaIOError as e:
+                self.logger.error("Error: unable to read SIM response.")
+                self.errors()
+                #The following should hopefully never run
+                raise RuntimeError("A problem as slipped through the errors() function") from e
+            file.write(f"{app}{last_entry+1},{temperature}" )
