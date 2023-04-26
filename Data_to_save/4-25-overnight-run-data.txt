@@ -1,4 +1,4 @@
-#Data from 4-25 overnight run
+#Data from 4-25 overnight run, inner can and radiation shield (not on)
 0,7.956500E+01
 1,7.923900E+01
 2,7.900200E+01
