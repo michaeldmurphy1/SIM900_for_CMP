@@ -360,7 +360,7 @@ class SRS_Device():
                 return j
         return self._talk_to_SIM( _curve_type, c,j )
     
-    def update_file(self, c:int, file_name:int, interval_on_screen:int):
+    def _update_file(self, c:int, file_name:int, interval_on_screen:int):
         if interval_on_screen != 0:
             with open(file_name, 'r') as file:
                 lines = file.readlines()

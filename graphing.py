@@ -8,7 +8,7 @@ from serial_talking import SRS_Device
 
 
 def animate(i:int, ax, SRS_connection:SRS_Device, thermo_num:int, interval:int, interval_on_screen:int, default_file:str):
-    SRS_connection.update_file(thermo_num, default_file, int(interval_on_screen/(interval/1000)))
+    SRS_connection._update_file(thermo_num, default_file, int(interval_on_screen/(interval/1000)))
     read_list = open(default_file,"r+").read().split('\n')
     xar = np.empty(len(read_list))
     yar = np.empty(len(read_list))
@@ -27,7 +27,7 @@ def animate(i:int, ax, SRS_connection:SRS_Device, thermo_num:int, interval:int, 
 def create_animation(therm_num:int, curve_type:int=0, update_interval:int=500, interval_on_screen:int=15, name_of_run:str=None)->str|None:  
     '''Call this class to create an animation of diode `therm_num`'''
     #Checking that we are able to write to the file requested
-    if( name_of_run is not None):
+    if( name_of_run is not None and name_of_run != ""):
         date = datetime.today().strftime('%m-%d')
         #Saving image
         png_file_name = f"{date}_{name_of_run}_plot.png"
@@ -52,12 +52,13 @@ def create_animation(therm_num:int, curve_type:int=0, update_interval:int=500, i
         ax = fig.add_subplot(1,1,1)
         ani = animation.FuncAnimation(fig, animate, fargs=(ax, chan,therm_num,update_interval,interval_on_screen, default_file), interval=update_interval, cache_frame_data=False )
         plt.show()
+        chan.end()
+        
         #At this point the window has been closed--need to save if told so
-        if( name_of_run is not None):
+        if( name_of_run is not None and name_of_run != ""):
             #Writing to files
             fig.savefig(os.path.join("Data_to_save", png_file_name))
             os.rename(default_file, new_path)
-        chan.end()
     except RuntimeError:
         #Thrown when the SIM900 is not turned on
         return "Problem Connecting to SIM900:\ntry turning on"
