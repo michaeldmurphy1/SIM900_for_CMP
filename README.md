@@ -13,7 +13,7 @@ visualization.
 
 Utilizing `Pyvisa`, one can interact with the SIM900, specifically the 
 SIM922 Diode Temperature Monitor, by creating a `SRS_Device` 
-object, as shown in my [example file](com_line.py), to be called from the 
+object, as shown in my [example file](example_code.py), to be called from the 
 command line.
 
 The functions of `serial_talking.py` are well documented and easy to use.
