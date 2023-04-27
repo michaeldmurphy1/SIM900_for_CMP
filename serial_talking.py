@@ -1,5 +1,4 @@
 import pyvisa
-import serial
 import atexit
 import numpy as np
 from time import sleep
@@ -22,10 +21,10 @@ class SRS_Device():
         #TODO: #3 figure out how to generalize ports?
         self.channel = rm.open_resource('ASRL1::INSTR')
         #A test to see if we are connected to something (if not, the SIM900 is not on)
-        '''try:
+        try:
             self.channel.query("*IDN?")
         except pyvisa.errors.VisaIOError as e:
-            raise RuntimeError("Please turn on the SIM900") from e'''
+            raise RuntimeError("Please turn on the SIM900") from e
         self.channel.read_termination = "\r\n"
         self.channel.write_termination = "\r"
         self.channel.write('SRST')
