@@ -1,6 +1,10 @@
 from serial_talking import SRS_Device
 from time import sleep
 
+'''
+Average voltage at 77 K: 9.924571428571431 mV
+'''
+
 if __name__ == "__main__":
     
     #Creating obect representing commmunication channel to device
@@ -8,13 +12,14 @@ if __name__ == "__main__":
     #Who are we talking to?
     chan.get_idn()
     #Output: Stanford_Research_Systems,SIM922,s/n024290,ver2.70
-    chan.set_points(1,0,"real1",[0.444,293,0.99246,77])
-    chan.set_points(2,0,"real2",[0.444,293,0.99246,77])
-    chan.view_points(1)
-    chan.view_points(2)
+    #chan.set_points(1,0,"real1",[0.444,293,0.99246,77])
+    #chan.set_points(2,0,"real2",[0.444,293,0.99246,77])
+
+
+    #chan.view_points(1)
+    #chan.view_points(2)
     #Syntax for getting data goes as chan.get_temp(n) or chan.get_volt(n), where
     #   'n' represents the SIM922 channel in question (1-4)
-    quit()
     #Call to get temperature for diode on line 1
     chan.get_temp(1)
     #Example output: 2.930000E+02 K
@@ -51,8 +56,3 @@ if __name__ == "__main__":
     chan.view_points(1)
     chan.curve_type(1,1)
     chan.get_volt(2, 1)
-
-
-'''
-Average voltage at 77 K: 9.924571428571431 mV
-'''

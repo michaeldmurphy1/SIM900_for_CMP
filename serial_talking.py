@@ -5,13 +5,14 @@ import numpy as np
 from time import sleep
 import logging
 import sys
+import os
 
 class SRS_Device():
 
     ESC = 'XYZ'
     temp_port = 4
 
-    def __init__(self):
+    def __init__(self,manual_exit:bool=False):
         logging.basicConfig(format="%(message)s", level=logging.INFO,
                             stream=sys.stdout)
         self.logger = logging.getLogger("SIM_Run")
@@ -35,9 +36,10 @@ class SRS_Device():
         #Now Interfacing with SIM922
         self.channel.write(f"CONN {self.temp_port},'{self.ESC}'")
         self._talk_to_SIM(self._set_error_masks)
+        self.channel.write("CURV 0,0")
 
         #Ensuring we properly close the channel at the end of a run
-        atexit.register(self.end)
+        if not manual_exit: atexit.register(self.end)
 
     def end(self):
         #Closing communication with ASRL1::INSTR
@@ -204,7 +206,7 @@ class SRS_Device():
             if( n is None ):
                 temp = self.channel.query(f'TVAL? {c}')
                 self.logger.info(f"{temp} K")
-                return temp
+                return float(temp)
             else:
                 if( n == 0 ):
                     self.logger.info("Indefinite Stream not implemented yet")
@@ -233,7 +235,7 @@ class SRS_Device():
             if( n is None ):
                 volt = self.channel.query(f'VOLT? {c}')
                 self.logger.info(f"{volt} V")
-                return volt
+                return float(volt)
             else:
                 if( n == 0 ):
                     self.logger.info("Indefinite Stream not implemented yet")
@@ -351,43 +353,51 @@ class SRS_Device():
             if( j is None ):
                 x = self.channel.query(f"CURV? {c}")
                 self.logger.info(f"Curve type: {x}, {names[int(x)]}")
-                return x
+                return int(x)
             else:
                 self.channel.write(f"CURV {c},{j}")
                 self.logger.info(f"Curve type: {str(j)}, {names[j]}")
                 return j
         return self._talk_to_SIM( _curve_type, c,j )
     
-    def update_file(self, c:int, interval_on_screen:int):
-        '''with open('temperature_data.txt', 'r') as file:
-            lines = file.readlines()
-        with open('temperature_data.txt', 'w') as file:
-            if( len(lines) > interval_on_screen ):
-                lines.pop(0)
-            start_time = int(lines[0].split(",")[0]) if( len(lines) > 0 ) else  0
-        
-            for i, line in enumerate(lines):
-                lines[i] = line.strip().split(",")[1]
-            try:
-                temperature = self.channel.query(f'VOLT? {c}')
-            except pyvisa.errors.VisaIOError as e:
-                self.logger.error("Error: unable to read SIM response.")
-                self.errors()
-                #The following should hopefully never run
-                raise RuntimeError("A problem as slipped through the errors() function") from e
-            lines.append(f"{temperature}")
-            file.write('\n'.join(f"{i+start_time},{temp}" for i,temp in enumerate(lines)))
-        '''
-        with open('temperature_data.txt', 'r+') as file:
-            lines = file.readlines()
-            if( len(lines)>0 ):
-                last_entry = int(lines[-1].split(",")[0])
-                app = '\n'
+    def update_file(self, c:int, file_name:int, interval_on_screen:int):
+        if interval_on_screen != 0:
+            with open(file_name, 'r') as file:
+                lines = file.readlines()
+            with open(file_name, 'w') as file:
+                if( len(lines) > interval_on_screen ):
+                    lines.pop(0)
+                start_time = int(lines[0].split(",")[0]) if( len(lines) > 0 ) else  0
+            
+                for i, line in enumerate(lines):
+                    lines[i] = line.strip().split(",")[1]
+                try:
+                    temperature = self.channel.query(f'TVAL? {c}')
+                except pyvisa.errors.VisaIOError as e:
+                    self.logger.error("Error: unable to read SIM response.")
+                    self.errors()
+                    #The following should hopefully never run
+                    raise RuntimeError("A problem as slipped through the errors() function") from e
+                lines.append(f"{temperature}")
+                file.write('\n'.join(f"{i+start_time},{temp}" for i,temp in enumerate(lines)))
+        else:
+            def _count_generator(reader):
+                b = reader(1024 * 1024)
+                while b:
+                    yield b
+                    b = reader(1024 * 1024)
+            length = None
+            if ( os.path.getsize(file_name) == 0):
+                last_entry = -1
+                app = ""
             else:
-                last_entry=-1
-                app=""
-            for i, line in enumerate(lines):
-                lines[i] = line.strip().split(",")[1]
+                with open(file_name, 'rb') as fp:
+                    c_generator = _count_generator(fp.raw.read)
+                    # count each \n
+                    count = sum(buffer.count(b'\n') for buffer in c_generator)
+                    length = count+1
+                last_entry = length-1
+                app = '\n'
             try:
                 temperature = self.channel.query(f'TVAL? {c}')
             except pyvisa.errors.VisaIOError as e:
@@ -395,4 +405,5 @@ class SRS_Device():
                 self.errors()
                 #The following should hopefully never run
                 raise RuntimeError("A problem as slipped through the errors() function") from e
-            file.write(f"{app}{last_entry+1},{temperature}" )
+            with open(file_name, 'a') as file:
+                file.write(f"{app}{last_entry+1},{temperature}" )
