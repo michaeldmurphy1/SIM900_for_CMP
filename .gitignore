@@ -1,3 +1,5 @@
 venv/
+
+Data_to_save/
 *.pyc
 /*.csv
