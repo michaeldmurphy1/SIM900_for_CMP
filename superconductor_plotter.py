@@ -1,49 +1,39 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.optimize import curve_fit
+import scipy
+
+
+def convert(volt:float)->float:
+    #This is from both fitting_V(T)_curve.py (d1 & d2) and TeachSpin (d3)
+    d1 = 1.1314 # [V/K]
+    d2 = 0.00004501 # [V/K]
+    d3 = 0.000405 # [V/K]
+
+    temp = lambda volt: (d1 - volt)/(d3 * scipy.special.lambertw(np.exp(d2/d3)*(d1-volt)/d3))
+    #voltage = lambda temp: d1 - (d2 * temp) - (d3 * temp * np.log(temp))
+    return temp(volt)
 
 
 
 if __name__ == "__main__":
-    with open("data_from_4_25_run.txt","r") as file:
-        lines = file.readlines()
+    # open file in format of "mV across sample, mV across diode"
+     with open("4-25-data.txt","r") as file:
+          lines = file.readlines()
+
+     x = list()
+     y = list()
+     for line in lines[1:]:
+          y_data,x_data = line.strip().split(",")
+          x.append(convert(float(x_data)*10**-3))
+          y.append(float(y_data)/1000)
+
+     fig = plt.figure()
+     ax = fig.add_subplot(111)
+     ax.set(title="Resistance vs temperature of superconductor sample")
+     ax.set_xlabel("Temperature [K]")
+     ax.set_ylabel("Resistance")
 
 
-    x = list()
-    y = list()
-    for line in lines[1:]:
-        x_data,y_data = line.strip().split(",")
-        x.append(int(x_data))
-        y.append(float(y_data))
+     ax.plot(x,y)
 
-
-    popt, pcov = curve_fit(lambda t, a, b, c: a * np.exp(b * t) + c, x[500::], y[500::],p0=(100, -1/500, 77))
-
-    a = popt[0]
-    b = popt[1]
-    c = popt[2]
-    print(a)
-    print(b)
-    print(c)
-    x_fitted = np.linspace(np.min(x[500::]), np.max(x[500::]), 100)
-    y_fitted = a * np.exp(b * x_fitted) + c
-
-
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ax.set(title="Fitting Cool-down of baseplate with inner can\nand radiation shield (turned off)")
-    ax.set_xlabel("Time [s]")
-    ax.set_ylabel("Temperature [K]")
-
-    ax.plot(x,y,label="Measured Data")
-    ax.plot(x_fitted, y_fitted, 'k', label='Fitted curve')
-
-
-    plt.show()
-
-    '''
-    Fit Data:
-    143.6143296470198
-    -0.0016538231448511278
-    79.03390250594735
-    '''
+     plt.show()
