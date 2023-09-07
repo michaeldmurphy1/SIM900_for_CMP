@@ -44,8 +44,7 @@ internally uses to read out temperatures from its measurement of voltage.
 
 Note that one can manually determine voltage / temperature conversion, described in
 [Chapter 4](https://drive.google.com/file/d/1KoboLt9d973GxG4DLJyS87Yn9WvwgvkH/view?usp=sharing)
-of the TeachSpin Cryostat manual, or via the code in the [Curve Fitting]
-(temperature_fitting_code) directory. The [wind.py](wind.py) does have a
+of the TeachSpin Cryostat manual, or via the code in the `/temperature_fitting_code` directory. The [wind.py](wind.py) does have a
 converter built in for quick PID conversions.
 
 Look at [example_code.py](example_code.py) for an intro to using the command line.
@@ -71,7 +70,7 @@ populate the Tkinker, but one can understand and manipulate functionality via th
 "command" functions at the top of the file, as well as the `graphing.py` file.
 
 Note: the "user defined" curve, mentioned in the tkinker window, requires knowledge of the
-`SRS_Device` handling to manipulate.
+`SRS_Device` handling to initially add points to.
 
 -------
 
@@ -81,3 +80,8 @@ While a user of this code need only know how to use the command line to open the
 and quite a bit more digging into the SIM922 manual to understand how you can manipulate the
 `SRS_Device` code. However, a lot of future improvements can be
 made though updating `wind.py` functionalities.
+
+Specific Improvement Ideas:
+ - Visualize Multiple Thermometers at the same time (really just storing two sets of data and plotting on the same axis twice)
+ - Set up curve calibration points from tkinker window
+ - update the name `wind.py` to `window.py` becuase two more characters really clears things up
