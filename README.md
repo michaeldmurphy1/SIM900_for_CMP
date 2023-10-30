@@ -1,7 +1,9 @@
 # SIM900_for_CMP
 
 This repository is for use in the Carnegie Mellon University Department of 
-Physics Modern Physics lab on Condensed Matter Physics (CMP).
+Physics Modern Physics lab on Condensed Matter Physics (CMP). Please see
+[this manual](https://docs.google.com/document/d/1xsgqqERIqc8ZFpyFgtvWTSyZ0KbxUYtzTdAOM4_Ets4/edit?usp=sharing)
+for a summary of the status of the physical experiment
 
 There are two main "bulks" of work: the code to communicate with the SIM900 
 from TeachSpin via `Pyvisa` as well as a  `Tkinker`-dependent temperature
